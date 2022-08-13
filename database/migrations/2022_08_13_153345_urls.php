@@ -29,7 +29,7 @@ return new class extends Migration {
         });
 
         Schema::create('url_downloads', function (Blueprint $table) {
-            $table->primary();
+            $table->id('id');
             $table->foreignUuid('url_id')->references('id')->on('urls');
             $table->string('content_url', 2048);
             $table->json('content');
@@ -37,9 +37,9 @@ return new class extends Migration {
         });
 
         Schema::create('url_links', function (Blueprint $table) {
-            $table->primary();
+            $table->id('id');
             $table->foreignUuid('source_url_id')->references('id')->on('urls');
-            $table->foreignUuid('source_url_id')->references('id')->on('urls');
+            $table->foreignUuid('target_url_id')->references('id')->on('urls');
             $table->string('label', 2048);
             $table->timestamps();
         });

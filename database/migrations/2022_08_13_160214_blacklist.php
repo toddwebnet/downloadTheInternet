@@ -13,8 +13,8 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('blacklist', function (Blueprint $table) {
-            $table->bigIncrements('id');
+        Schema::create('blacklists', function (Blueprint $table) {
+            $table->id('id');
             $table->string('domain', 2048);
             $table->timestamps();
         });
@@ -42,9 +42,9 @@ return new class extends Migration {
                      'archive.org',
 
                  ] as $host) {
-            $sql = "insert into blacklists (host) values(?)";
+            $sql = "insert into blacklists (domain) values(?)";
             $params = [trim(strtolower($host))];
-            DB::update($sql);
+            DB::update($sql, $params);
 
         }
     }

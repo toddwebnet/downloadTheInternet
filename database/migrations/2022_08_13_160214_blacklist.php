@@ -15,8 +15,10 @@ return new class extends Migration {
     {
         Schema::create('blacklists', function (Blueprint $table) {
             $table->id('id');
-            $table->string('domain', 2048);
+            $table->string('domain', 512);
             $table->timestamps();
+            $table->index('domain', 'idx_blacklists_domain');
+
         });
 
         foreach ([
@@ -56,6 +58,6 @@ return new class extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('blacklist');
+        Schema::dropIfExists('blacklists');
     }
 };

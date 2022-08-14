@@ -14,17 +14,18 @@ return new class extends Migration {
     {
         Schema::create('domains', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('domain', 2048);
+            $table->string('domain', 512);
             $table->timestamps();
+            $table->index('domain', 'idx_domains_domain');
         });
 
         Schema::create('urls', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('domain_id')->references('id')->on('domains');
             $table->string('url', 2048);
+            $table->boolean('is_valid')->default(false);
+            $table->boolean('is_skipped')->default(false);
             $table->timestamp('last_refreshed')->nullable();
-            $table->boolean('is_valid')->default(true);
-            $table->boolean('is_skipped')->default(true);
             $table->timestamps();
         });
 
@@ -38,9 +39,9 @@ return new class extends Migration {
 
         Schema::create('url_links', function (Blueprint $table) {
             $table->id('id');
-            $table->foreignUuid('source_url_id')->references('id')->on('urls');
-            $table->foreignUuid('target_url_id')->references('id')->on('urls');
-            $table->string('label', 2048);
+            $table->foreignUuid('url_id')->references('id')->on('urls');
+            $table->foreignUuid('parent_url_id')->references('id')->on('urls');
+            $table->json('labels');
             $table->timestamps();
         });
     }

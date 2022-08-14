@@ -14,7 +14,7 @@ class QueueService
     const DEFAULT_QUEUE = 'default';
 
     const AVAILABLE_QUEUES = [
-        'default', 'urls', 'downloads', 'procs'
+        'default', 'urls', 'downloads', 'procs', 'finalize'
     ];
 
     public function sendToQueue($class, $args = null, $queue = null, $runNow = false)

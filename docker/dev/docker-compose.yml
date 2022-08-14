@@ -17,13 +17,15 @@ services:
         image: minio/minio
         container_name: dti-minio
         ports:
-            - 9000:9000
+            - "9010:9010"
+            - "9011:9011"
         volumes:
             - ${DATA_PATH_HOST}/mino/data:/export
             - ${DATA_PATH_HOST}/minio/config:/root/.minio
         environment:
             MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
             MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+        command: server --console-address :9010 /export
         networks:
             - network
 

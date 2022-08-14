@@ -21,9 +21,10 @@ class UrlService
     {
         $urlInfo = UrlParserService::instance()->parse($url);
         $domain = Domain::firstOrCreate(['domain' => $urlInfo['domain']]);
+
         $url = Url::firstOrCreate([
             'domain_id' => $domain->id,
-            'url' => $url
+            'url' => UrlParserService::instance()->buildFullLinkOnPage($url)
         ]);
 
         if (Blacklist::where('domain', $domain->domain)->first() !== null) {
@@ -34,10 +35,10 @@ class UrlService
         if ($parentUrlId !== null) {
             $urlLink = UrlLink::firstOrCreate([
                 'url_id' => $url->id,
-                'parent_link_id' => $parentUrlId
+                'parent_url_id' => $parentUrlId
             ]);
-            if ($label !== null) {
-                $urlLink->addLabel($label);
+            if ($label !== null && trim($label) != '') {
+                $urlLink->addLabel(trim($label));
             }
         }
 
@@ -45,31 +46,41 @@ class UrlService
 
     public function getAndSaveUrl($urlId)
     {
+
         $url = Url::find($urlId);
         if ($url !== null) {
             $stream = $this->getUrlContent($url);
             if ($stream !== null) {
                 $this->saveContents($stream, $urlId);
                 $url->last_refreshed = Carbon::now();
-                $url->saved();
+                $url->save();
             }
         }
+
     }
 
     private function saveContents(Stream $stream, $urlId)
     {
         $storagePath = storage_path() . '/urls';
-        if(!directoryExists($storagePath)){
+        if (!is_dir($storagePath)) {
             mkdir($storagePath);
         }
         $storagePath .= '/' . $urlId;
+        if (file_exists($storagePath)) {
+            unlink($storagePath);
+        }
         file_put_contents($storagePath, $stream);
     }
 
     public function getUrlContent(Url $url): null|Stream
     {
         $client = app()->make(Client::class);
-        $res = $client->request('GET', $url->url);
+        try {
+            $res = $client->request('GET', $url->url);
+        } catch (\Exception $e) {
+            $url->invalidate();
+            return null;
+        }
         if (!$this->isValidHtml($res)) {
             $url->invalidate();
             return null;

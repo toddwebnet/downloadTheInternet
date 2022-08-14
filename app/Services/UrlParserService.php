@@ -16,12 +16,14 @@ class UrlParserService
     {
         $url = $this->cleanUrl($url);
         $parsed = parse_url($url);
-        if (!array_key_exists('path', $parsed)) {
+        if (!isset($parsed['path'])) {
             $parsed['path'] = '/';
         } else {
             $parsed['path'] = rtrim($parsed['path'], '/');
         }
-        $parsed['domain'] = $this->getDomain($parsed['host']);
+        if (isset($parsed['host'])) {
+            $parsed['domain'] = $this->getDomain($parsed['host']);
+        }
         return $parsed;
     }
 
@@ -46,9 +48,9 @@ class UrlParserService
      * @param $url
      * @return string
      */
-    public function buildFullLinkOnPage($url)
+    public function buildFullLinkOnPage($url, $parentUrl = null)
     {
-        $parsedUrl = $this->parse();
+        $parsedUrl = $this->parse($url);
 
         if (strpos($url, '#') !== false) {
             $url = substr($url, 0, strpos($url, '#'));
@@ -59,8 +61,9 @@ class UrlParserService
         if (strpos($url, '//') === 0) {
             return "http:{$url}";
         }
-        if (strpos($url, '/') === 0) {
-            return "{$parsedUrl['scheme']}://{$parsedUrl['host']}{$url}";
+        if (strpos($url, '/') === 0 || strpos($url, '?') === 0) {
+            $parsedParent = $this->parse($parentUrl);
+            return "{$parsedParent['scheme']}://{$parsedParent['host']}{$url}";
         }
         if (strpos($url, '.') === 0) {
             return $this->buildRelativeUrl($url);
@@ -125,16 +128,17 @@ class UrlParserService
     {
         $original = $domain = strtolower($domain);
 
-        if (filter_var($domain, FILTER_VALIDATE_IP)) { return $domain; }
+        if (filter_var($domain, FILTER_VALIDATE_IP)) {
+            return $domain;
+        }
 
-        $debug ? print('<strong style="color:green">&raquo;</strong> Parsing: '.$original) : false;
+        $debug ? print('<strong style="color:green">&raquo;</strong> Parsing: ' . $original) : false;
 
-        $arr = array_slice(array_filter(explode('.', $domain, 4), function($value){
+        $arr = array_slice(array_filter(explode('.', $domain, 4), function ($value) {
             return $value !== 'www';
         }), 0); //rebuild array indexes
 
-        if (count($arr) > 2)
-        {
+        if (count($arr) > 2) {
             $count = count($arr);
             $_sub = explode('.', $count === 4 ? $arr[3] : $arr[2]);
 
@@ -148,17 +152,14 @@ class UrlParserService
                     $removed = array_shift($arr);
                 }
                 $debug ? print("<br>\n" . '[*] Two level TLD: <strong>' . join('.', $_sub) . '</strong> ') : false;
-            }
-            elseif (count($_sub) === 1) // one level TLD
+            } elseif (count($_sub) === 1) // one level TLD
             {
                 $removed = array_shift($arr); //remove the subdomain
 
                 if (strlen($_sub[0]) === 2 && $count === 3) // TLD domain must be 2 letters
                 {
                     array_unshift($arr, $removed);
-                }
-                else
-                {
+                } else {
                     // non country TLD according to IANA
                     $tlds = array(
                         'aero',
@@ -190,31 +191,27 @@ class UrlParserService
                         array_shift($arr);
                     }
                 }
-                $debug ? print("<br>\n" .'[*] One level TLD: <strong>'.join('.', $_sub).'</strong> ') : false;
-            }
-            else // more than 3 levels, something is wrong
+                $debug ? print("<br>\n" . '[*] One level TLD: <strong>' . join('.', $_sub) . '</strong> ') : false;
+            } else // more than 3 levels, something is wrong
             {
-                for ($i = count($_sub); $i > 1; $i--)
-                {
+                for ($i = count($_sub); $i > 1; $i--) {
                     $removed = array_shift($arr);
                 }
                 $debug ? print("<br>\n" . '[*] Three level TLD: <strong>' . join('.', $_sub) . '</strong> ') : false;
             }
-        }
-        elseif (count($arr) === 2)
-        {
+        } elseif (count($arr) === 2) {
             $arr0 = array_shift($arr);
 
             if (strpos(join('.', $arr), '.') === false
-                && in_array($arr[0], array('localhost','test','invalid')) === false) // not a reserved domain
+                && in_array($arr[0], array('localhost', 'test', 'invalid')) === false) // not a reserved domain
             {
-                $debug ? print("<br>\n" .'Seems invalid domain: <strong>'.join('.', $arr).'</strong> re-adding: <strong>'.$arr0.'</strong> ') : false;
+                $debug ? print("<br>\n" . 'Seems invalid domain: <strong>' . join('.', $arr) . '</strong> re-adding: <strong>' . $arr0 . '</strong> ') : false;
                 // seems invalid domain, restore it
                 array_unshift($arr, $arr0);
             }
         }
 
-        $debug ? print("<br>\n".'<strong style="color:gray">&laquo;</strong> Done parsing: <span style="color:red">' . $original . '</span> as <span style="color:blue">'. join('.', $arr) ."</span><br>\n") : false;
+        $debug ? print("<br>\n" . '<strong style="color:gray">&laquo;</strong> Done parsing: <span style="color:red">' . $original . '</span> as <span style="color:blue">' . join('.', $arr) . "</span><br>\n") : false;
 
         return join('.', $arr);
     }

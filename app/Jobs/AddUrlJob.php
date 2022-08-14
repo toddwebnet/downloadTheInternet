@@ -12,7 +12,7 @@ class AddUrlJob extends BaseJob
     public function handle()
     {
         $url = $this->args['url'];
-        $parentUrlId = isset($this->args['sourceUrlId']) ? $this->args['parentUrlId'] : null;
+        $parentUrlId = isset($this->args['parentUrlId']) ? $this->args['parentUrlId'] : null;
         $label = isset($this->args['label']) ? $this->args['label'] : null;
         UrlService::instance()->addUrl($url, $parentUrlId, $label);
     }

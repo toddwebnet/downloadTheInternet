@@ -4,10 +4,12 @@ namespace App\Console\Commands;
 
 use App\Models\Domain;
 use App\Models\Url;
+use App\Services\HtmlProcessService;
 use App\Services\RedisListService;
 use App\Services\UrlParserService;
 use App\Services\UrlService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 
 class TestCommand extends Command
 {
@@ -16,18 +18,12 @@ class TestCommand extends Command
     public function handle()
     {
 
-        RedisListService::instance()->clearList('james');
-        $list = RedisListService::instance()->getList('james');
-        foreach ([
-                     'dog', 'cat', 'snake', 'cow', 'rabbit'
-                 ] as $key) {
-            RedisListService::instance()->addToList('james', $key);
-        }
-
-        dump(RedisListService::instance()->getList('james'));
-        RedisListService::instance()->removeFromList('james', 'snake');
-        RedisListService::instance()->removeFromList('james', 'rabbit');
-        dump(RedisListService::instance()->getList('james'));
+        Artisan::call('migrate:refresh');
+        Artisan::call('url:add', ['url' => 'http://www.infowars.com']);
+        sleep(1);
+        Artisan::call('url:pop');
+        sleep(1);
+        Artisan::call('url:proc');
 
 
     }

@@ -17,8 +17,11 @@ class Url extends Model
         $this->save();
     }
 
-    public function queuePopGet()
+    public static function queuePopGet()
     {
-        return self::whereIsNull('last_refreshed')->where('is_skipped', 0)->first();
+        return self::whereNull('last_refreshed')
+            ->where('is_skipped', 0)
+            ->take(10)
+            ->get();
     }
 }

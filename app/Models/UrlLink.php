@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class UrlLink extends Model
 {
+    protected $attributes = ['labels' => '[]'];
     protected $fillable = ['labels', 'url_id', 'parent_url_id'];
 
     public function setLabelsAttribute(array $labels)

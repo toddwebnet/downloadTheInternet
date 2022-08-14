@@ -9,6 +9,13 @@ class RedisListService
 {
     use Singleton;
 
+    public const QUEUED = 'url_processing';
+    public const DOWNLOADING = 'url_downloading';
+    public const PROCESSING = 'url_processing';
+    public const FINALIZING = 'url_finalizing';
+
+
+
     private $redis;
     private $prefix = 'dti_';
 
@@ -17,9 +24,16 @@ class RedisListService
         $this->redis = Redis::connection('default');
     }
 
+    public function clearFromAllLists($urlId){
+        foreach([
+            self::QUEUED, self::DOWNLOADING, self::PROCESSING, self::FINALIZING
+        ] as $key){
+            $this->removeFromList($key, $urlId);
+        }
+    }
+
     private function prependList($list)
     {
-        return $list;
         return $this->prefix . $list;
     }
 

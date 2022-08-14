@@ -22,17 +22,18 @@ return new class extends Migration {
         Schema::create('urls', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('domain_id')->references('id')->on('domains');
-            $table->string('url', 2048);
+            $table->string('url', 768)->unique();
             $table->boolean('is_valid')->default(false);
             $table->boolean('is_skipped')->default(false);
             $table->timestamp('last_refreshed')->nullable();
             $table->timestamps();
+            $table->index('url', 'idx_urls_url');
         });
 
         Schema::create('url_downloads', function (Blueprint $table) {
             $table->id('id');
             $table->foreignUuid('url_id')->references('id')->on('urls');
-            $table->string('content_url', 2048);
+            $table->string('content_url', 768);
             $table->json('content');
             $table->timestamps();
         });

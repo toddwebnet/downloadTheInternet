@@ -49,6 +49,13 @@ services:
             - 8080:8080
         networks:
             - network
+
+    server-redis:
+        image: redis
+        container_name: dti-redis
+        restart: unless-stopped
+        networks:
+            - network
 networks:
     network:
         driver: bridge
